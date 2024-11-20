@@ -12,7 +12,7 @@ var w, startButton, sliders;
 var node, cmdPeriodFunc;
 var params, specs;
 
-SynthDef("sampleGranulator1", {
+SynthDef("silo", {
 	arg bufnum=0, rate=1, dur=0.1, pos=0, jitter = 1, spray=0, grains=10, vol=0;
 	var snd;
 	var newGrain=Impulse.kr(grains,1-spray)+Dust.kr(grains,spray);
@@ -47,7 +47,7 @@ specs = [
 
 ~bufferInputFile=Buffer.readChannel(s,thisProcess.nowExecutingPath.dirname++"/weather.wav",channels:0);
 
-x=Synth("sampleGranulator1", [\bufnum, \rate, \dur, \pos, \jitter, \spray, \grains, \vol, ~bufferInputFile]); // will start playing
+x=Synth("silo", [\bufnum, \rate, \dur, \pos, \jitter, \spray, \grains, \vol, ~bufferInputFile]); // will start playing
 
 // make the window
 w = Window("silo-engine", Rect(20, 400, 440, 180));
