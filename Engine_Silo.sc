@@ -16,7 +16,7 @@ Engine_Silo : CroneEngine {
 
 
 		SynthDef("silo", {
-			arg bufnum=0, rate=1, dur=0.1, pos=0, jitter = 1, spray=0, grains=10, vol=0;
+			arg bufnum=0, rate=1, dur=0.1, pos=0, jitter = 1, spray=0, grains=10, vol=0.5;
 			var snd;
 			var newGrain=Impulse.kr(grains,1-spray)+Dust.kr(grains,spray);
 
@@ -26,7 +26,7 @@ Engine_Silo : CroneEngine {
 				dur: dur, //in seconds
 				sndbuf:bufnum,
 				rate:rate,
-				pos:pos+LFNoise0.kr(3).range(-0.5, 0.5),
+				pos:pos+LFNoise0.kr(3).range(-0.5, 0.5), //todo: replace 3 with something more dynamic
 				mul: vol
 			).poll;
 
@@ -35,17 +35,15 @@ Engine_Silo : CroneEngine {
 		}).add;
 
         context.server.sync;
-		//stopped here
 
-        //////// 3 ////////
-		// create the the sound "synth", we'll create two instances of the synth
+		//create two instances of the synth
 		// so two samples can be played simultaneously
-        synthSampler = Array.fill(2,{arg i;
-            Synth("sampler",target:context.server);
+        siloVoices = Array.fill(2,{arg i;
+            Synth("silo",target:context.server);
         });
 
-        //////// 4 ////////
-        // define commands for the lua
+
+        // expose args to lua
 
 		// a load function to load samples - is == int string where int is the sampler instance and string is the sample
         this.addCommand("sample","is", { arg msg;
@@ -53,17 +51,14 @@ Engine_Silo : CroneEngine {
             Buffer.read(context.server,msg[2],action:{
                 arg buffer;
                 ("loaded "++msg[2]).postln;
-                synthSampler[msg[1]-1].set(\bufnum,buffer);
+                siloVoices[msg[1]-1].set(\bufnum,buffer);
             });
         });
 
         // setting the position
-        this.addCommand("pos","iff", { arg msg;
+        this.addCommand("pos","if", { arg msg;
             synthSampler[msg[1]-1].set(
-                \t_trig,1,
-                \reset,msg[2],
-                \start,msg[2],
-                \end,msg[3],
+				\pos, msg[2],
             );
         });
 
@@ -86,6 +81,6 @@ Engine_Silo : CroneEngine {
         //////// 5 ////////
         // free any variable we create
         // otherwise it won't ever stop!
-        2.do({arg i; synthSampler[i].free});
+        2.do({arg i; siloVoices[i].free});
     }
 }
